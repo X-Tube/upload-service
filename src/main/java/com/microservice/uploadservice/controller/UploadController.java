@@ -30,9 +30,12 @@ public class UploadController {
     @PostMapping("/complete/{videoId}/video")
     public ResponseEntity<Void> completeUpload(
             @PathVariable String videoId,
-            @RequestBody CompleteUploadRequest request
+            @RequestBody CompleteUploadRequest request,
+            HttpServletRequest http
     ) {
-        uploadUseCase.completeUpload(videoId, request);
+        Long userId = Long.parseLong(http.getHeader("user-id"));
+
+        uploadUseCase.completeUpload(videoId, userId, request);
 
         return ResponseEntity.ok().build();
     }
