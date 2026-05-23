@@ -14,17 +14,17 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Video {
 
-    UUID id;
+    private UUID id;
 
-    Long author;
+    private Long author;
 
-    String title;
+    private String title;
 
-    String description;
+    private String description;
 
-    VideoStatus videoStatus;
+    private VideoStatus videoStatus;
 
-    Long duration;
+    private Long duration;
 
-    Long size;
+    private Long size;
 }

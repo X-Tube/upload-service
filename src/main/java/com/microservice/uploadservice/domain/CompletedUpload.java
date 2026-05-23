@@ -1,5 +1,6 @@
 package com.microservice.uploadservice.domain;
 
+import com.microservice.uploadservice.controller.dtos.requests.PartRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,9 +12,8 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class MultiPartUpload {
-
+public class CompletedUpload {
     private String uploadId;
 
-    private List<String> partUrls;
+    private List<PartUpload> parts;
 }

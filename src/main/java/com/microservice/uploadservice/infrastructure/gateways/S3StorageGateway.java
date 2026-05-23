@@ -2,13 +2,12 @@ package com.microservice.uploadservice.infrastructure.gateways;
 
 import com.microservice.uploadservice.application.gateways.StorageGateway;
 import com.microservice.uploadservice.domain.MultiPartUpload;
+import com.microservice.uploadservice.domain.PartUpload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.UploadPartRequest;
+import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -72,6 +71,25 @@ public class S3StorageGateway implements StorageGateway {
                 .uploadId(uploadId)
                 .partUrls(partUrls)
                 .build();
+    }
+
+    @Override
+    public void completeMultipartUpload(String videoId, String uploadId, List<PartUpload> parts) {
+        List<CompletedPart> completedParts = parts.stream()
+                .map(part -> CompletedPart.builder()
+                        .partNumber(part.getPartNumber())
+                        .eTag(part.getETag())
+                        .build())
+                .toList();
+
+        CompleteMultipartUploadRequest request = CompleteMultipartUploadRequest.builder()
+                .bucket(videoBucket)
+                .key(videoId)
+                .uploadId(uploadId)
+                .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
+                .build();
+
+        s3Client.completeMultipartUpload(request);
     }
 
     private String generatePartUrl(String key, String uploadId, int partNumber) {

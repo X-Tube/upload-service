@@ -1,16 +1,14 @@
 package com.microservice.uploadservice.controller;
 
 import com.microservice.uploadservice.application.usecases.UploadUseCase;
+import com.microservice.uploadservice.controller.dtos.requests.CompleteUploadRequest;
 import com.microservice.uploadservice.controller.dtos.requests.UploadRequest;
 import com.microservice.uploadservice.controller.dtos.resposes.UploadResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/uploads")
@@ -27,5 +25,15 @@ public class UploadController {
         Long userId = Long.parseLong(http.getHeader("user-id"));
 
         return new ResponseEntity<>(uploadUseCase.startUpload(request, userId), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/complete/{videoId}/video")
+    public ResponseEntity<Void> completeUpload(
+            @PathVariable String videoId,
+            @RequestBody CompleteUploadRequest request
+    ) {
+        uploadUseCase.completeUpload(videoId, request);
+
+        return ResponseEntity.ok().build();
     }
 }

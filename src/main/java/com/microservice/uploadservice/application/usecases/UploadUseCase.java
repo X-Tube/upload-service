@@ -2,6 +2,7 @@ package com.microservice.uploadservice.application.usecases;
 
 import com.microservice.uploadservice.application.gateways.MessageProducer;
 import com.microservice.uploadservice.application.gateways.StorageGateway;
+import com.microservice.uploadservice.controller.dtos.requests.CompleteUploadRequest;
 import com.microservice.uploadservice.controller.dtos.requests.UploadRequest;
 import com.microservice.uploadservice.controller.dtos.resposes.MultiPartUploadResponse;
 import com.microservice.uploadservice.controller.dtos.resposes.UploadResponse;
@@ -48,5 +49,17 @@ public class UploadUseCase {
                 .videoMultiPartURL(multipartResponse)
                 .thumbnailURL(thumbnailUrl)
                 .build();
+    }
+
+    public void completeUpload(String videoId, CompleteUploadRequest completeUploadRequest) {
+        var completedUpload = multiPartMapper.requestToDomain(completeUploadRequest);
+
+        storageGateway.completeMultipartUpload(
+                videoId,
+                completedUpload.getUploadId(),
+                completedUpload.getParts()
+        );
+
+        messageProducer.sendEvent(new VideoUploadedEvent(videoId));
     }
 }
