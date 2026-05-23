@@ -7,7 +7,7 @@ import java.util.UUID;
 @Builder
 public record UploadResponse(
         UUID videoId,
-        String videoURL,
+        MultiPartUploadResponse videoMultiPartURL,
         String thumbnailURL
 ) {
 }

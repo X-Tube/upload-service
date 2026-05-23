@@ -4,6 +4,7 @@ public record UploadRequest(
         String title,
         String description,
         Long duration,
-        Long size
+        Long size,
+        int totalParts
 ) {
 }

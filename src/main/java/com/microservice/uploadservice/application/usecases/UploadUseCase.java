@@ -3,9 +3,12 @@ package com.microservice.uploadservice.application.usecases;
 import com.microservice.uploadservice.application.gateways.MessageProducer;
 import com.microservice.uploadservice.application.gateways.StorageGateway;
 import com.microservice.uploadservice.controller.dtos.requests.UploadRequest;
+import com.microservice.uploadservice.controller.dtos.resposes.MultiPartUploadResponse;
 import com.microservice.uploadservice.controller.dtos.resposes.UploadResponse;
+import com.microservice.uploadservice.domain.MultiPartUpload;
 import com.microservice.uploadservice.domain.Video;
 import com.microservice.uploadservice.domain.enums.VideoStatus;
+import com.microservice.uploadservice.infrastructure.mappers.MultiPartMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +22,14 @@ public class UploadUseCase {
 
     private final StorageGateway storageGateway;
     private final MessageProducer messageProducer;
+    private final MultiPartMapper multiPartMapper;
 
     public UploadResponse startUpload(UploadRequest request, Long senderId) {
         UUID videoId = UUID.randomUUID();
-        Map<String, String> presignedUrls = storageGateway.generateUploadPresignedUrls(videoId);
+        String thumbnailUrl = storageGateway.generateThumbnailUrl(videoId);
+        MultiPartUpload multiPartUpload = storageGateway.initiateMultipartUpload(videoId, request.totalParts());
+
+        MultiPartUploadResponse multipartResponse = multiPartMapper.domainToResponse(multiPartUpload);
 
         Video video = Video.builder()
                 .id(videoId)
@@ -38,8 +45,8 @@ public class UploadUseCase {
 
         return UploadResponse.builder()
                 .videoId(videoId)
-                .videoURL(presignedUrls.get("VIDEO_KEY"))
-                .thumbnailURL(presignedUrls.get("THUMBNAIL_KEY"))
+                .videoMultiPartURL(multipartResponse)
+                .thumbnailURL(thumbnailUrl)
                 .build();
     }
 }
