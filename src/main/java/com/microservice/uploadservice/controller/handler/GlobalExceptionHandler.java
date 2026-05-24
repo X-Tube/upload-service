@@ -1,5 +1,6 @@
 package com.microservice.uploadservice.controller.handler;
 
+import com.microservice.uploadservice.application.exceptions.KafkaServerException;
 import com.microservice.uploadservice.application.exceptions.UnauthorizedActionException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,18 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(KafkaServerException.class)
+    public ResponseEntity<StandardError> handleKafkaServerException(KafkaServerException e, HttpServletRequest request) {
+        var response = StandardError.builder()
+                .error(e.getMessage())
+                .timestamp(LocalDate.now())
+                .path(request.getRequestURI())
+                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
