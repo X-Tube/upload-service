@@ -66,8 +66,6 @@ public class UploadUseCase {
                 completedUpload.getUploadId(),
                 completedUpload.getParts()
         );
-
-        messageProducer.sendEvent(new VideoUploadedEvent(videoId));
     }
 
     private void throwIfUserIdIsNull(Long userId) {
