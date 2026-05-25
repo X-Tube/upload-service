@@ -1,5 +1,6 @@
 package com.microservice.uploadservice.infrastructure.gateways;
 
+import com.microservice.uploadservice.application.exceptions.S3ServerException;
 import com.microservice.uploadservice.application.gateways.StorageGateway;
 import com.microservice.uploadservice.domain.MultiPartUpload;
 import com.microservice.uploadservice.domain.PartUpload;
@@ -36,60 +37,72 @@ public class S3StorageGateway implements StorageGateway {
 
     @Override
     public String generateThumbnailUrl(UUID videoId) {
-        PutObjectRequest putObjectRequest = PutObjectRequest
-                .builder()
-                .bucket(thumbnailBucket)
-                .key(videoId.toString())
-                .build();
+        try {
+            PutObjectRequest putObjectRequest = PutObjectRequest
+                    .builder()
+                    .bucket(thumbnailBucket)
+                    .key(videoId.toString())
+                    .build();
 
-        PutObjectPresignRequest presignRequest = PutObjectPresignRequest
-                .builder()
-                .signatureDuration(Duration.ofMinutes(duration))
-                .putObjectRequest(putObjectRequest)
-                .build();
+            PutObjectPresignRequest presignRequest = PutObjectPresignRequest
+                    .builder()
+                    .signatureDuration(Duration.ofMinutes(duration))
+                    .putObjectRequest(putObjectRequest)
+                    .build();
 
-        PresignedPutObjectRequest presignedPutRequest = s3Presigner.presignPutObject(presignRequest);
+            PresignedPutObjectRequest presignedPutRequest = s3Presigner.presignPutObject(presignRequest);
 
-        return presignedPutRequest.url().toString();
+            return presignedPutRequest.url().toString();
+        } catch (S3Exception ex) {
+            throw throwS3Exceptions(ex);
+        }
     }
 
     @Override
     public MultiPartUpload initiateMultipartUpload(UUID videoId, int totalParts) {
-        CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
-                .bucket(videoBucket)
-                .key(videoId.toString())
-                .build();
+        try {
+            CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
+                    .bucket(videoBucket)
+                    .key(videoId.toString())
+                    .build();
 
-        String uploadId = s3Client.createMultipartUpload(createRequest).uploadId();
+            String uploadId = s3Client.createMultipartUpload(createRequest).uploadId();
 
-        List<String> partUrls = new ArrayList<>();
-        for (int i = 1; i <= totalParts; i++) {
-            partUrls.add(generatePartUrl(videoId.toString(), uploadId, i));
+            List<String> partUrls = new ArrayList<>();
+            for (int i = 1; i <= totalParts; i++) {
+                partUrls.add(generatePartUrl(videoId.toString(), uploadId, i));
+            }
+
+            return MultiPartUpload.builder()
+                    .uploadId(uploadId)
+                    .partUrls(partUrls)
+                    .build();
+        } catch (S3Exception ex) {
+            throw throwS3Exceptions(ex);
         }
-
-        return MultiPartUpload.builder()
-                .uploadId(uploadId)
-                .partUrls(partUrls)
-                .build();
     }
 
     @Override
     public void completeMultipartUpload(String videoId, String uploadId, List<PartUpload> parts) {
-        List<CompletedPart> completedParts = parts.stream()
-                .map(part -> CompletedPart.builder()
-                        .partNumber(part.getPartNumber())
-                        .eTag(part.getETag())
-                        .build())
-                .toList();
+        try {
+            List<CompletedPart> completedParts = parts.stream()
+                    .map(part -> CompletedPart.builder()
+                            .partNumber(part.getPartNumber())
+                            .eTag(part.getETag())
+                            .build())
+                    .toList();
 
-        CompleteMultipartUploadRequest request = CompleteMultipartUploadRequest.builder()
-                .bucket(videoBucket)
-                .key(videoId)
-                .uploadId(uploadId)
-                .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
-                .build();
+            CompleteMultipartUploadRequest request = CompleteMultipartUploadRequest.builder()
+                    .bucket(videoBucket)
+                    .key(videoId)
+                    .uploadId(uploadId)
+                    .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
+                    .build();
 
-        s3Client.completeMultipartUpload(request);
+            s3Client.completeMultipartUpload(request);
+        } catch (S3Exception ex) {
+            throw throwS3Exceptions(ex);
+        }
     }
 
     private String generatePartUrl(String key, String uploadId, int partNumber) {
@@ -106,5 +119,9 @@ public class S3StorageGateway implements StorageGateway {
                 .build();
 
         return s3Presigner.presignUploadPart(presignRequest).url().toString();
+    }
+
+    private S3ServerException throwS3Exceptions(S3Exception ex) {
+        return new S3ServerException("Error while connecting to S3: " + ex.getMessage());
     }
 }

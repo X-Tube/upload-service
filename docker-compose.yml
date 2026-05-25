@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # 1. LocalStack (AWS S3 Emulator)
+  localstack:
+    image: localstack/localstack:3.4.0
+    container_name: localstack_upload_service
+    ports:
+      - "4566:4566" # The standard LocalStack port
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+    volumes:
+      - ./localstack-data:/var/lib/localstack
+      # This pro-tip automatically creates your buckets when the container boots!
+      - ./init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+
+  # 2. Confluent Kafka (Kraft Mode - No Zookeeper needed!)
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka_upload_service
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      # Auto-create your topic so the Java and Go services can talk immediately
+      KAFKA_CREATE_TOPICS: "video-uploaded-events:1:1"

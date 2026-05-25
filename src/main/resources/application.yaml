@@ -7,13 +7,13 @@ spring:
 
 aws:
   s3:
-    endpoint: ${AWS_S3_ENDPOINT:http://localhost:9000}
+    endpoint: ${AWS_S3_ENDPOINT:http://s3.localhost.localstack.cloud:4566}
     region: ${AWS_S3_REGION:us-east-1}
     access-key: ${AWS_S3_ACCESS_KEY:testadmin}
     secret-key: ${AWS_S3_SECRET_KEY:testpassword}
     buckets:
-      video-input: ${AWS_S3_VIDEO_BUCKET:raw-videos-bucket}
-      thumbnail-input: ${AWS_S3_THUMBNAIL_BUCKET:raw-thumbnails-bucket}
+      video-input: ${AWS_S3_VIDEO_BUCKET:test-video-bucket}
+      thumbnail-input: ${AWS_S3_THUMBNAIL_BUCKET:test-thumbnail-bucket}
       duration: ${AWS_S3_PRESIGNED_DURATION:15}
 
 kafka:
