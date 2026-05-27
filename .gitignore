@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+docker-compose*.yml
+init-aws.sh
+
+/localstack-data/**

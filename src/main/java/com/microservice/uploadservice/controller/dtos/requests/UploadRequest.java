@@ -1,10 +1,12 @@
 package com.microservice.uploadservice.controller.dtos.requests;
 
+import jakarta.validation.constraints.NotNull;
+
 public record UploadRequest(
-        String title,
-        String description,
-        Long duration,
-        Long size,
-        int totalParts
+        @NotNull String title,
+        @NotNull String description,
+        @NotNull Long duration,
+        @NotNull Long size,
+        @NotNull int totalParts
 ) {
 }
