@@ -20,10 +20,8 @@ public class UploadController {
     @PostMapping("/new")
     public ResponseEntity<UploadResponse> uploadVideo(
             @RequestBody UploadRequest request,
-            HttpServletRequest http
+            @RequestHeader("user-id") Long userId
     ) {
-        Long userId = Long.parseLong(http.getHeader("user-id"));
-
         return new ResponseEntity<>(uploadUseCase.startUpload(request, userId), HttpStatus.CREATED);
     }
 
@@ -31,10 +29,8 @@ public class UploadController {
     public ResponseEntity<Void> completeUpload(
             @PathVariable String videoId,
             @RequestBody CompleteUploadRequest request,
-            HttpServletRequest http
+            @RequestHeader("user-id") Long userId
     ) {
-        Long userId = Long.parseLong(http.getHeader("user-id"));
-
         uploadUseCase.completeUpload(videoId, userId, request);
 
         return ResponseEntity.ok().build();

@@ -19,3 +19,6 @@ aws:
 kafka:
   topic:
     video-uploaded: ${KAFKA_TOPIC_VIDEO_UPLOADED:xtube.video.progress}
+
+server:
+  port: 8081
